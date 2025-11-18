@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>번개장터 상품 - 테스트 페이지</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 32px;
+    }
+
+    .filters {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .filter-row input,
+    .filter-row select,
+    .filter-row button {
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .filter-row input {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .filter-row button {
+      background-color: #ff6b35;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.2s;
+    }
+
+    .filter-row button:hover {
+      background-color: #ff5722;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .product-card {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .product-image {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      background-color: #f0f0f0;
+    }
+
+    .product-info {
+      padding: 15px;
+    }
+
+    .product-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.4;
+      height: 44px;
+    }
+
+    .product-price {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ff6b35;
+      margin-bottom: 5px;
+    }
+
+    .product-status {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .status-selling {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .status-sold {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+
+    .product-meta {
+      font-size: 13px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 30px;
+    }
+
+    .pagination button {
+      padding: 10px 20px;
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      background-color: #ff6b35;
+      color: white;
+      border-color: #ff6b35;
+    }
+
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #666;
+    }
+
+    .error {
+      background-color: #ffebee;
+      color: #c62828;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .stats {
+      text-align: center;
+      color: #666;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛒 번개장터 상품 목록</h1>
+
+    <div class="filters">
+      <div class="filter-row">
+        <input type="text" id="searchInput" placeholder="검색어 입력 (예: 애플워치, 아이폰 등)">
+        <select id="sortSelect">
+          <option value="score">추천순</option>
+          <option value="latest">최신순</option>
+          <option value="price_asc">낮은 가격순</option>
+          <option value="price_desc">높은 가격순</option>
+        </select>
+        <input type="number" id="minPrice" placeholder="최소 가격">
+        <input type="number" id="maxPrice" placeholder="최대 가격">
+        <button id="searchBtn">검색</button>
+        <button id="resetBtn" style="background-color: #757575;">초기화</button>
+      </div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div id="loading" class="loading" style="display: none;">
+      상품을 불러오는 중...
+    </div>
+
+    <div id="error" class="error" style="display: none;"></div>
+
+    <div class="product-grid" id="productGrid"></div>
+
+    <div class="pagination">
+      <button id="prevBtn" disabled>이전</button>
+      <button id="nextBtn" disabled>다음</button>
+    </div>
+  </div>
+
+  <script>
+    let currentCursor = null;
+    let hasNext = false;
+    let cursors = []; // Stack to track previous cursors for back navigation
+    let currentParams = {};
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadProducts();
+
+      document.getElementById('searchBtn').addEventListener('click', handleSearch);
+      document.getElementById('resetBtn').addEventListener('click', handleReset);
+      document.getElementById('prevBtn').addEventListener('click', handlePrev);
+      document.getElementById('nextBtn').addEventListener('click', handleNext);
+
+      // Enter key search
+      document.getElementById('searchInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSearch();
+      });
+    });
+
+    function handleSearch() {
+      cursors = [];
+      currentCursor = null;
+
+      currentParams = {
+        q: document.getElementById('searchInput').value.trim() || undefined,
+        sort: document.getElementById('sortSelect').value,
+        minPrice: document.getElementById('minPrice').value || undefined,
+        maxPrice: document.getElementById('maxPrice').value || undefined,
+      };
+
+      loadProducts(currentParams);
+    }
+
+    function handleReset() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('sortSelect').value = 'score';
+      document.getElementById('minPrice').value = '';
+      document.getElementById('maxPrice').value = '';
+
+      cursors = [];
+      currentCursor = null;
+      currentParams = {};
+
+      loadProducts();
+    }
+
+    function handlePrev() {
+      if (cursors.length > 0) {
+        cursors.pop(); // Remove current cursor
+        currentCursor = cursors[cursors.length - 1] || null;
+        loadProducts(currentParams, currentCursor);
+      }
+    }
+
+    function handleNext() {
+      if (hasNext && currentCursor) {
+        cursors.push(currentCursor);
+        loadProducts(currentParams, currentCursor);
+      }
+    }
+
+    async function loadProducts(params = {}, cursor = null) {
+      const loading = document.getElementById('loading');
+      const error = document.getElementById('error');
+      const grid = document.getElementById('productGrid');
+      const stats = document.getElementById('stats');
+
+      loading.style.display = 'block';
+      error.style.display = 'none';
+      grid.innerHTML = '';
+
+      try {
+        // Build query string
+        const queryParams = new URLSearchParams({
+          size: 20,
+          ...params,
+          ...(cursor && { cursor }),
+        });
+
+        const response = await fetch(`/shopify-proxy/products?${queryParams}`);
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || '상품을 불러오는데 실패했습니다');
+        }
+
+        const products = data.data.products;
+        const pagination = data.data.pagination;
+
+        // Update cursor state
+        currentCursor = pagination.cursor;
+        hasNext = pagination.hasNext;
+
+        // Update stats
+        stats.textContent = `${pagination.count}개의 상품이 검색되었습니다`;
+
+        // Render products
+        if (products.length === 0) {
+          grid.innerHTML = '<div class="loading">검색 결과가 없습니다</div>';
+        } else {
+          products.forEach(product => {
+            const card = createProductCard(product);
+            grid.appendChild(card);
+          });
+        }
+
+        // Update pagination buttons
+        document.getElementById('prevBtn').disabled = cursors.length === 0;
+        document.getElementById('nextBtn').disabled = !hasNext;
+
+      } catch (err) {
+        error.textContent = err.message;
+        error.style.display = 'block';
+        console.error('Failed to load products:', err);
+      } finally {
+        loading.style.display = 'none';
+      }
+    }
+
+    function createProductCard(product) {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.onclick = () => window.open(product.url, '_blank');
+
+      const imageUrl = product.images && product.images[0]
+        ? product.images[0]
+        : 'https://via.placeholder.com/250?text=No+Image';
+
+      const statusClass = product.saleStatus === 'SELLING' ? 'status-selling' : 'status-sold';
+      const statusText = product.saleStatus === 'SELLING' ? '판매중' : '판매완료';
+
+      const conditionMap = {
+        'NEW': '새상품',
+        'LIKE_NEW': '거의 새것',
+        'USED': '사용감 있음',
+        'HEAVILY_USED': '사용감 많음'
+      };
+
+      card.innerHTML = `
+        <img src="${imageUrl}" alt="${product.title}" class="product-image"
+             onerror="this.src='https://via.placeholder.com/250?text=No+Image'">
+        <div class="product-info">
+          <div class="product-status ${statusClass}">${statusText}</div>
+          <div class="product-title">${product.title}</div>
+          <div class="product-price">${formatPrice(product.price)}원</div>
+          ${product.shippingFee > 0
+            ? `<div class="product-meta">배송비 ${formatPrice(product.shippingFee)}원</div>`
+            : '<div class="product-meta" style="color: #2e7d32;">무료배송</div>'}
+          ${product.condition
+            ? `<div class="product-meta">상태: ${conditionMap[product.condition] || product.condition}</div>`
+            : ''}
+        </div>
+      `;
+
+      return card;
+    }
+
+    function formatPrice(price) {
+      return new Intl.NumberFormat('ko-KR').format(price);
+    }
+  </script>
+</body>
+</html>
