@@ -2,8 +2,47 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const config = require('../config');
-const logger = require('../utils/logger');
+
+// Simple config for Vercel (no file-based logging)
+const config = {
+  bunjang: {
+    apiUrl: process.env.BUNJANG_API_URL || 'https://openapi.bunjang.co.kr',
+    accessKey: process.env.BUNJANG_ACCESS_KEY,
+    secretKey: process.env.BUNJANG_SECRET_KEY,
+  },
+  server: {
+    port: process.env.PORT || 3000,
+    env: process.env.NODE_ENV || 'production',
+  },
+  cache: {
+    productsTTL: 300,
+    productDetailTTL: 600,
+    categoriesTTL: 3600,
+  },
+};
+
+// Simple console logger for Vercel
+const logger = {
+  info: (...args) => console.log('[INFO]', ...args),
+  debug: (...args) => console.log('[DEBUG]', ...args),
+  warn: (...args) => console.warn('[WARN]', ...args),
+  error: (...args) => console.error('[ERROR]', ...args),
+};
+
+// Monkey-patch require to intercept config and logger imports
+const Module = require('module');
+const originalRequire = Module.prototype.require;
+
+Module.prototype.require = function(id) {
+  if (id === '../config' || id === './config' || id.endsWith('/config')) {
+    return config;
+  }
+  if (id === '../utils/logger' || id === './utils/logger' || id.endsWith('/utils/logger')) {
+    return logger;
+  }
+  return originalRequire.apply(this, arguments);
+};
+
 const proxyRoutes = require('../routes/proxy');
 const { errorHandler, notFoundHandler } = require('../middleware/errorHandler');
 
