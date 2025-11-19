@@ -4,12 +4,29 @@ const cors = require('cors');
 const helmet = require('helmet');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
-const NodeCache = require('node-cache');
 const crypto = require('crypto');
 
 // Generate UUID v4 without external dependency
 function generateUUID() {
   return crypto.randomUUID();
+}
+
+// Simple in-memory cache for Vercel (no NodeCache dependency)
+const simpleCache = new Map();
+function getCache(key) {
+  const item = simpleCache.get(key);
+  if (!item) return null;
+  if (Date.now() > item.expiry) {
+    simpleCache.delete(key);
+    return null;
+  }
+  return item.value;
+}
+function setCache(key, value, ttlSeconds) {
+  simpleCache.set(key, {
+    value,
+    expiry: Date.now() + (ttlSeconds * 1000),
+  });
 }
 
 // ===== CONFIG =====
@@ -94,14 +111,14 @@ bunjangClient.interceptors.request.use((requestConfig) => {
 
 async function getProducts(params = {}) {
   const cacheKey = `products:${JSON.stringify(params)}`;
-  const cached = cache.get(cacheKey);
+  const cached = getCache(cacheKey);
 
   if (cached) {
     return cached;
   }
 
   const response = await bunjangClient.get('/api/v1/products', { params });
-  cache.set(cacheKey, response.data, config.cache.productsTTL);
+  setCache(cacheKey, response.data, config.cache.productsTTL);
 
   return response.data;
 }
