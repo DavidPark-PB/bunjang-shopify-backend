@@ -232,6 +232,25 @@ class BunjangService {
   }
 
   /**
+   * Convert KRW to USD with 10% markup
+   * @param {number} krwPrice - Price in Korean Won
+   * @returns {number} Price in USD with markup
+   */
+  convertPriceToUSD(krwPrice) {
+    const USD_EXCHANGE_RATE = 1350; // 1 USD = 1350 KRW (approximate)
+    const MARKUP_PERCENT = 0.10; // 10% markup
+
+    // Convert to USD
+    const usdPrice = krwPrice / USD_EXCHANGE_RATE;
+
+    // Add 10% markup
+    const priceWithMarkup = usdPrice * (1 + MARKUP_PERCENT);
+
+    // Round to 2 decimal places
+    return Math.round(priceWithMarkup * 100) / 100;
+  }
+
+  /**
    * Transform Bunjang product to Shopify-compatible format
    * Based on actual Bunjang API response structure
    * @param {object} bunjangProduct - Bunjang product object
@@ -246,13 +265,19 @@ class BunjangService {
       }
     }
 
+    // Convert prices to USD with markup
+    const priceUSD = this.convertPriceToUSD(bunjangProduct.price);
+    const shippingFeeUSD = this.convertPriceToUSD(bunjangProduct.shippingFee || 0);
+
     return {
       id: bunjangProduct.pid,
       title: bunjangProduct.name,
       description: bunjangProduct.description || '',
-      price: bunjangProduct.price,
-      shippingFee: bunjangProduct.shippingFee,
-      currency: 'KRW',
+      price: priceUSD,
+      priceKRW: bunjangProduct.price,
+      shippingFee: shippingFeeUSD,
+      shippingFeeKRW: bunjangProduct.shippingFee,
+      currency: 'USD',
       images: images,
       imageUrlTemplate: bunjangProduct.imageUrlTemplate,
       imageCount: bunjangProduct.imageCount,
