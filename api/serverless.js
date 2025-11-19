@@ -3,9 +3,14 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 const NodeCache = require('node-cache');
+const crypto = require('crypto');
+
+// Generate UUID v4 without external dependency
+function generateUUID() {
+  return crypto.randomUUID();
+}
 
 // ===== CONFIG =====
 const config = {
@@ -51,7 +56,7 @@ class BunjangAuthService {
     const payload = {
       iat: Math.floor(Date.now() / 1000),
       accessKey: this.accessKey,
-      nonce: uuidv4(),
+      nonce: generateUUID(),
     };
 
     const secretKeyBuffer = Buffer.from(this.secretKey, 'base64');
