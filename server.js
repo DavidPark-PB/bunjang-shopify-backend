@@ -57,7 +57,11 @@ app.get('/health', (req, res) => {
 });
 
 // App Proxy routes
-// These will be accessed via https://your-store.myshopify.com/apps/bunjang/*
+// Shopify App Proxy will forward requests to /proxy
+// Format: https://ccorea.com/apps/bunjang/* → https://render.com/proxy/*
+app.use('/proxy', proxyRoutes);
+
+// Keep legacy route for direct testing
 app.use('/shopify-proxy', proxyRoutes);
 
 // 404 handler
