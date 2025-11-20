@@ -156,8 +156,16 @@ app.get('/proxy/*', async (req, res) => {
 
     // Route based on path
     if (proxyPath === 'products' || proxyPath === 'search') {
+      // Prepare query params
+      const queryParams = { ...req.query };
+
+      // Fix: 'score' sort only works with search query
+      if (queryParams.sort === 'score' && !queryParams.q) {
+        queryParams.sort = 'latest';
+      }
+
       // Get products from Bunjang
-      const bunjangData = await callBunjangAPI('/api/v1/products', req.query);
+      const bunjangData = await callBunjangAPI('/api/v1/products', queryParams);
 
       // Transform products: convert KRW to USD with 10% markup
       const transformedProducts = (bunjangData.data || []).map(product => {
